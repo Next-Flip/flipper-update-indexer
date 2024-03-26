@@ -197,9 +197,7 @@ class PacksCatalog:
             logging.exception(e)
             raise e
 
-    def get_file_path(
-        self: str, pack: str, file_type: str, file_name: str
-    ) -> str:  # FIXME
+    def get_file_path(self: str, pack: str, file_type: str, file_name: str) -> str:
         """
         A method to get a specific file by type and name in the specified pack
         Args:
