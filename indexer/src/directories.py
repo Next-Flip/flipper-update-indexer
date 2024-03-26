@@ -3,7 +3,7 @@ import asyncio
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 
-from .repository import indexes
+from .repository import indexes, RepositoryIndex, PacksCatalog
 
 
 router = APIRouter()
@@ -30,7 +30,7 @@ async def directory_request(directory):
     response_class=RedirectResponse,
     status_code=302,
 )
-async def latest_request(directory, channel, target, file_type):
+async def repository_latest_request(directory, channel, target, file_type):
     """
     A method for retrieving a file from the repository
     of a specific version
@@ -46,6 +46,8 @@ async def latest_request(directory, channel, target, file_type):
     if directory not in indexes:
         return JSONResponse(f"{directory} not found!", status_code=404)
     index = indexes.get(directory)
+    if not isinstance(index, RepositoryIndex):
+        return JSONResponse("Path not found!", status_code=404)
     if len(index.index["channels"]) == 0:
         return JSONResponse("No channels found!", status_code=404)
     try:
@@ -55,7 +57,7 @@ async def latest_request(directory, channel, target, file_type):
 
 
 @router.get("/{directory}/{channel}/{file_name}")
-async def file_request(directory, channel, file_name):
+async def repository_file_request(directory, channel, file_name):
     """
     A method for retrieving a file from the repository
     of a specific version
@@ -70,6 +72,8 @@ async def file_request(directory, channel, file_name):
     if directory not in indexes:
         return JSONResponse(f"{directory} not found!", status_code=404)
     index = indexes.get(directory)
+    if not isinstance(index, RepositoryIndex):
+        return JSONResponse("Path not found!", status_code=404)
     if len(index.index["channels"]) == 0:
         return JSONResponse("No channels found!", status_code=404)
     try:

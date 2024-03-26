@@ -150,7 +150,7 @@ class RepositoryIndex:
         return file_path
 
 
-class AssetPacksIndex:
+class PacksCatalog:
     index: dict
 
     def __init__(
@@ -200,44 +200,6 @@ class AssetPacksIndex:
             logging.exception(e)
             raise e
 
-    def get_file_from_latest_version(
-        self: str, channel: str, target: str, file_type: str
-    ) -> str:  # FIXME
-        """
-        A method to get a file in the latest version of the
-        current directory by its target and type
-        Args:
-            channel: Channel type (release, dev)
-            target: Operating System (linux, mac, win)
-            file_type: File Type
-
-        Returns:
-            String URL of file`s location
-        """
-        target = target.replace("-", "/")
-        try:
-            channels = self.index["channels"]
-            current_channel = next(
-                filter(lambda c: c.get("id") == channel, channels), None
-            )
-
-            if current_channel is None:
-                valueerr_msg = f"Channel `{channel}` not found!"
-                logging.exception(valueerr_msg)
-                raise ValueError(valueerr_msg)
-
-            latest_version = current_channel.get("versions")[0]
-            latest_version_file = next(
-                filter(
-                    lambda c: c.get("target") == target and c.get("type") == file_type,
-                    latest_version.get("files"),
-                )
-            )
-            return latest_version_file.get("url")
-        except Exception as e:
-            logging.exception(e)
-            raise e
-
     def get_file_path(self: str, channel: str, file_name: str) -> str:  # FIXME
         """
         A method to get a file in the latest version of the
@@ -262,7 +224,7 @@ indexes = {
         github_repo=settings.firmware_github_repo,
         github_org=settings.github_org,
     ),
-    "asset-packs": AssetPacksIndex(
+    "asset-packs": PacksCatalog(
         directory="asset-packs",
     ),
 }
