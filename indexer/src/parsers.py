@@ -125,9 +125,7 @@ def parse_github_channels(
     return json.dict()
 
 
-def parse_asset_packs(
-    directory: str, pack_parser: PackParser
-) -> dict:
+def parse_asset_packs(directory: str, pack_parser: PackParser) -> dict:
     """
     Method for creating a new catalog with packs
     Args:

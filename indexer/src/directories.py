@@ -59,8 +59,7 @@ async def repository_latest_request(directory, channel, target, file_type):
 @router.get("/{directory}/{channel}/{file_name}")
 async def repository_file_request(directory, channel, file_name):
     """
-    A method for retrieving a file from the repository
-    of a specific version
+    A method for retrieving a file from a specific version
     Args:
         directory: Repository name
         channel: Channel type (release, dev)

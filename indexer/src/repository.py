@@ -135,8 +135,7 @@ class RepositoryIndex:
 
     def get_file_path(self: str, channel: str, file_name: str) -> str:
         """
-        A method to get a file in the latest version of the
-        current directory by its target and type
+        A method to get a specific file by name in the specified channel
         Args:
             channel: Channel type (release, dev)
             file_name: File Name
@@ -190,9 +189,7 @@ class PacksCatalog:
             Nothing
         """
         try:
-            self.index = parse_asset_packs(
-                self.directory, self.pack_parser
-            )
+            self.index = parse_asset_packs(self.directory, self.pack_parser)
             logging.info(f"{self.directory} reindex OK")
             self.delete_empty_directories()
         except Exception as e:
@@ -200,19 +197,23 @@ class PacksCatalog:
             logging.exception(e)
             raise e
 
-    def get_file_path(self: str, channel: str, file_name: str) -> str:  # FIXME
+    def get_file_path(
+        self: str, pack: str, file_type: str, file_name: str
+    ) -> str:  # FIXME
         """
-        A method to get a file in the latest version of the
-        current directory by its target and type
+        A method to get a specific file by type and name in the specified pack
         Args:
-            channel: Channel type (release, dev)
+            pack: Pack id
+            file_type: File Type (file, preview)
             file_name: File Name
 
         Returns:
             The file path
         """
-        file_path = os.path.join(settings.files_dir, self.directory, channel, file_name)
-        if not os.path.isfile(file_path):
+        file_path = os.path.join(
+            settings.files_dir, self.directory, pack, file_type, file_name
+        )
+        if file_type not in ("file", "preview") or not os.path.isfile(file_path):
             raise FileNotFoundError("File not found, try a newer link!")
         return file_path
 

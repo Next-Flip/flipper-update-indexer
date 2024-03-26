@@ -214,7 +214,7 @@ class PackParser(BaseModel):
             description=description,
         )
 
-        files_path = os.path.join(packpath, "files")
+        files_path = os.path.join(packpath, "file")
         for cur in sorted(os.listdir(files_path)):
             # skip .DS_store files
             if cur.startswith("."):
@@ -222,13 +222,18 @@ class PackParser(BaseModel):
             if not cur.endswith((".zip", ".tar")):
                 continue
             file_path = os.path.join(files_path, cur)
-            pack.add_file(PackFile(
-                url=os.path.join(settings.base_url, os.path.relpath(file_path, settings.files_dir)),
-                type="pack_" + cur.rsplit(".", 1)[-1],
-                sha256=self.getSHA256(file_path)
-            ))
+            pack.add_file(
+                PackFile(
+                    url=os.path.join(
+                        settings.base_url,
+                        os.path.relpath(file_path, settings.files_dir),
+                    ),
+                    type="pack_" + cur.rsplit(".", 1)[-1],
+                    sha256=self.getSHA256(file_path),
+                )
+            )
 
-        previews_path = os.path.join(packpath, "previews")
+        previews_path = os.path.join(packpath, "preview")
         if os.path.isdir(previews_path):
             for cur in sorted(os.listdir(previews_path)):
                 # skip .DS_store files
@@ -237,6 +242,11 @@ class PackParser(BaseModel):
                 if not cur.endswith((".png", ".gif")):
                     continue
                 preview_path = os.path.join(previews_path, cur)
-                pack.add_preview_url(os.path.join(settings.base_url, os.path.relpath(preview_path, settings.files_dir)))
+                pack.add_preview_url(
+                    os.path.join(
+                        settings.base_url,
+                        os.path.relpath(preview_path, settings.files_dir),
+                    )
+                )
 
         self.result = pack
