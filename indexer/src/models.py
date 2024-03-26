@@ -1,9 +1,13 @@
 import re
+import os
+import json
 import hashlib
 import logging
 from pydantic import BaseModel
 from github import Github, Repository
 from typing import List
+
+from .settings import settings
 
 
 class VersionFile(BaseModel):
@@ -50,8 +54,8 @@ class Pack(BaseModel):
     id: str
     title: str
     author: str
-    source_url: str
-    description: str
+    source_url: str = None
+    description: str = None
     files: List[PackFile] = []
     preview_urls: List[str] = []
 
@@ -178,3 +182,61 @@ class FileParser(BaseModel):
             raise Exception(exception_msg)
         self.target = match.group(1)
         self.type = match.group(2) + "_" + match.group(6)
+
+
+class PackParser(BaseModel):
+    result: Pack = None
+
+    def getSHA256(self, filepath: str) -> str:
+        with open(filepath, "rb") as file:
+            file_bytes = file.read()
+            sha256 = hashlib.sha256(file_bytes).hexdigest()
+        return sha256
+
+    def parse(self, packpath: str) -> None:
+        id = os.path.basename(packpath)
+
+        meta_path = os.path.join(packpath, "meta.json")
+        with open(meta_path, "r") as f:
+            meta: dict = json.load(f)
+
+        description: str = None
+        description_path = os.path.join(packpath, "desc.md")
+        if os.path.isfile(description_path):
+            with open(description_path, "r") as f:
+                description = f.read()
+
+        pack = Pack(
+            id=id,
+            title=meta.get("title", id.title()),
+            author=meta.get("author", "N/A"),
+            source_url=meta.get("source_url"),
+            description=description,
+        )
+
+        files_path = os.path.join(packpath, "files")
+        for cur in sorted(os.listdir(files_path)):
+            # skip .DS_store files
+            if cur.startswith("."):
+                continue
+            if not cur.endswith((".zip", ".tar")):
+                continue
+            file_path = os.path.join(files_path, cur)
+            pack.add_file(PackFile(
+                url=os.path.join(settings.base_url, os.path.relpath(file_path, settings.files_dir)),
+                type="pack_" + cur.rsplit(".", 1)[-1],
+                sha256=self.getSHA256(file_path)
+            ))
+
+        previews_path = os.path.join(packpath, "previews")
+        if os.path.isdir(previews_path):
+            for cur in sorted(os.listdir(previews_path)):
+                # skip .DS_store files
+                if cur.startswith("."):
+                    continue
+                if not cur.endswith((".png", ".gif")):
+                    continue
+                preview_path = os.path.join(previews_path, cur)
+                pack.add_preview_url(os.path.join(settings.base_url, os.path.relpath(preview_path, settings.files_dir)))
+
+        self.result = pack
