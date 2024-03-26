@@ -2,7 +2,7 @@ import os
 import shutil
 import logging
 
-from .parsers import parse_github_channels
+from .parsers import parse_github_channels, parse_asset_packs
 from .models import *
 from .settings import settings
 
@@ -156,11 +156,11 @@ class AssetPacksIndex:
     def __init__(
         self,
         directory: str,
-        file_parser: FileParser = FileParser,  # FIXME
+        pack_parser: PackParser = PackParser,
     ):
-        self.index = Index().dict()
+        self.index = Catalog().dict()
         self.directory = directory
-        self.file_parser = file_parser
+        self.pack_parser = pack_parser
 
     def delete_empty_directories(self):
         """
@@ -181,21 +181,18 @@ class AssetPacksIndex:
 
     def reindex(self):
         """
-        Method for starting reindexing. We get three channels - dev, release
-        from the main repository in the git. We run through all 3 channels,
-        each channel has different versions inside. We create models for all
-        versions and stuff them with the path to the artifacts.
+        Method for starting reindexing. We get available packs from disk
+        and parse them for metadata, previews and artifacts.
 
-        At the end of reindexing, all unnecessary branches and
-        empty directories are cleared
+        At the end of reindexing, all unnecessary empty directories are cleared
 
         Returns:
             Nothing
         """
         try:
-            self.index = parse_github_channels(
-                self.directory, self.file_parser, self.indexer_github
-            )  # FIXME
+            self.index = parse_asset_packs(
+                self.directory, self.pack_parser
+            )
             logging.info(f"{self.directory} reindex OK")
             self.delete_empty_directories()
         except Exception as e:

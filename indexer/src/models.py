@@ -40,6 +40,35 @@ class Index(BaseModel):
         self.channels.append(channel)
 
 
+class PackFile(BaseModel):
+    url: str
+    type: str
+    sha256: str
+
+
+class Pack(BaseModel):
+    id: str
+    title: str
+    author: str
+    source_url: str
+    description: str
+    files: List[PackFile] = []
+    preview_urls: List[str] = []
+
+    def add_file(self, file: PackFile) -> None:
+        self.files.append(file)
+
+    def add_preview_url(self, preview_url: str) -> None:
+        self.preview_urls.append(preview_url)
+
+
+class Catalog(BaseModel):
+    packs: List[Pack] = []
+
+    def add_pack(self, pack: Pack) -> None:
+        self.packs.append(pack)
+
+
 class IndexerGithub:
     __repo: Repository.Repository = None
     __tags: List = []
