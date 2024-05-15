@@ -244,7 +244,7 @@ class PackParser(BaseModel):
                 # skip .DS_store files
                 if cur.startswith("."):
                     continue
-                if not cur.endswith((".png", ".gif", ".mp4", ".webm")):
+                if not cur.endswith((".png", ".jpg", ".gif", ".mp4", ".webm")):
                     continue
                 preview_path = os.path.join(previews_path, cur)
                 pack.add_preview_url(
