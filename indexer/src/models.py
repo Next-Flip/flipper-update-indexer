@@ -211,18 +211,12 @@ class PackParser(BaseModel):
         with open(meta_path, "r") as f:
             meta: dict = json.load(f)
 
-        description: str = None
-        description_path = os.path.join(packpath, "desc.md")
-        if os.path.isfile(description_path):
-            with open(description_path, "r") as f:
-                description = f.read()
-
         pack = Pack(
             id=id,
             title=meta.get("title", id.title()),
             author=meta.get("author", "N/A"),
             source_url=meta.get("source_url"),
-            description=description,
+            description=meta.get("description"),
         )
 
         files_path = os.path.join(packpath, "file")
