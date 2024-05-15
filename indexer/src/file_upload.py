@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import pathlib
 import logging
 import asyncio
 import tempfile
@@ -57,8 +58,19 @@ def move_files_for_indexed(dest_dir: str, source_dir: str, version_token: str) -
                 do_cleanup = True
     else:
         do_cleanup = True
+    pathlib.Path(dest_dir).mkdir(parents=True, exist_ok=True)
     if do_cleanup:
-        cleanup_dir(dest_dir)
+        files_per_build = len(os.listdir(source_dir))
+        builds_to_keep = 20
+        prev_files = [
+            entry.path
+            for entry in sorted(
+                os.scandir(dest_dir), key=lambda e: e.stat().st_mtime, reverse=True
+            )
+        ]
+        cleanup_files = prev_files[files_per_build * builds_to_keep :]
+        for cleanup_file in cleanup_files:
+            os.remove(cleanup_file)
         if version_token:
             with open(token_file_path, "w") as token_file:
                 token_file.write(version_token)

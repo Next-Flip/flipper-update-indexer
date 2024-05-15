@@ -5,7 +5,7 @@ import hashlib
 import logging
 from pydantic import BaseModel
 from github import Github, Repository
-from typing import List
+from typing import List, ClassVar
 
 from .settings import settings
 
@@ -138,9 +138,18 @@ class IndexerGithub:
                 logging.exception(exception_msg)
                 raise Exception(exception_msg)
             last_commit = commits[0]
+            changelog = ""
+            for commit in commits.get_page(0):
+                msg = (
+                    commit.commit.message.splitlines()[0]
+                    .replace("`", "")
+                    .replace("_", "\_")
+                )
+                msg = msg[:50] + ("..." if len(msg) > 50 else "")
+                changelog += f"- [`{commit.sha[:8]}`]({commit.url}): {msg} - [__{commit.author.login}__](https://github.com/{commit.author.login})\n"
             return Version(
                 version=last_commit.sha[:8],
-                changelog="Last commit: " + last_commit.commit.message,
+                changelog=changelog,
                 timestamp=int(last_commit.commit.author.date.timestamp()),
             )
         except Exception as e:
@@ -166,6 +175,9 @@ class IndexerGithub:
 class FileParser(BaseModel):
     target: str = ""
     type: str = ""
+    regex: ClassVar[re.Pattern] = re.compile(
+        r"^flipper-z-(\w+)-(\w+)-mntm-([0-9]+()?|(dev-\w+))\.(\w+)$"
+    )
 
     def getSHA256(self, filepath: str) -> str:
         with open(filepath, "rb") as file:
@@ -174,8 +186,7 @@ class FileParser(BaseModel):
         return sha256
 
     def parse(self, filename: str) -> None:
-        regex = re.compile(r"^flipper-z-(\w+)-(\w+)-mntm-([0-9]+()?|(dev-\w+))\.(\w+)$")
-        match = regex.match(filename)
+        match = self.regex.match(filename)
         if not match:
             exception_msg = f"Unknown file {filename}"
             logging.exception(exception_msg)
