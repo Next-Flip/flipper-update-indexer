@@ -146,7 +146,7 @@ class IndexerGithub:
                     .replace("_", "\_")
                 )
                 msg = msg[:50] + ("..." if len(msg) > 50 else "")
-                changelog += f"- [`{commit.sha[:8]}`]({commit.url}): {msg} - [__{commit.author.login}__](https://github.com/{commit.author.login})\n"
+                changelog += f"[`{commit.sha[:8]}`]({commit.html_url}): {msg} - [__{commit.author.login}__](https://github.com/{commit.author.login})\n"
             return Version(
                 version=last_commit.sha[:8],
                 changelog=changelog,
