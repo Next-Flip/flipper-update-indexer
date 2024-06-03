@@ -52,7 +52,7 @@ class PackFile(BaseModel):
 
 class Pack(BaseModel):
     id: str
-    title: str
+    name: str
     author: str
     source_url: str = None
     description: str = None
@@ -214,7 +214,7 @@ class PackParser(BaseModel):
 
         pack = Pack(
             id=id,
-            title=meta.get("title", id.title()),
+            name=meta.get("name", id.title()),
             author=meta.get("author", "N/A"),
             source_url=meta.get("source_url"),
             description=meta.get("description"),
