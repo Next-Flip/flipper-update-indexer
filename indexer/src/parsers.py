@@ -45,6 +45,10 @@ def add_files_to_version(
             latest_version = "mntm-" + match.group(3)
             if not version.version.startswith("mntm-"):
                 version.version = latest_version.removeprefix("mntm-dev-")
+                if version.version in version.changelog:
+                    pos = version.changelog.find(version.version)
+                    pos = version.changelog.rfind("\n", 0, pos)
+                    version.changelog = version.changelog[pos+1:]
         elif latest_version not in cur:
             continue
         version.add_file(
