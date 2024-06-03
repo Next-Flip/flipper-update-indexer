@@ -225,7 +225,7 @@ class PackParser(BaseModel):
             # skip .DS_store files
             if cur.startswith("."):
                 continue
-            if not cur.endswith((".zip", ".tar")):
+            if not cur.endswith((".zip", ".tar.gz")):
                 continue
             file_path = os.path.join(files_path, cur)
             pack.add_file(
@@ -234,7 +234,7 @@ class PackParser(BaseModel):
                         settings.base_url,
                         os.path.relpath(file_path, settings.files_dir),
                     ),
-                    type="pack_" + cur.rsplit(".", 1)[-1],
+                    type="pack_" + cur.rsplit(".", 1)[-1].replace("gz", "targz"),
                     sha256=self.getSHA256(file_path),
                 )
             )
