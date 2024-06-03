@@ -157,16 +157,16 @@ def parse_asset_packs(directory: str, pack_parser: PackParser) -> dict:
         raise Exception(exception_msg)
 
     for cur in sorted(os.listdir(directory_path)):
-        # skip .DS_store files
-        if cur.startswith("."):
-            continue
         pack_path = os.path.join(directory_path, cur)
+        # skip .DS_store files
+        if cur.startswith(".") or not os.path.isdir(pack_path):
+            continue
         parsed_pack = pack_parser()
         try:
-            parsed_pack.parse(pack_path)
+            pack = parsed_pack.parse(pack_path)
         except Exception as e:
             logging.exception(e)
             continue
-        json.add_pack(parsed_pack.result)
+        json.add_pack(pack)
 
     return json.dict()

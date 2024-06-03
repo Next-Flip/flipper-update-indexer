@@ -1,12 +1,17 @@
 import re
 import os
 import json
+import gzip
+import shutil
+import tarfile
 import hashlib
 import logging
+import pathlib
 from pydantic import BaseModel
 from github import Github, Repository
 from typing import List, ClassVar
 
+from . import asset_packer
 from .settings import settings
 
 
@@ -197,7 +202,11 @@ class FileParser(BaseModel):
 
 
 class PackParser(BaseModel):
-    result: Pack = None
+    GZIP_MODE = "wb"
+    GZIP_LEVEL = 9
+    TAR_MODE = "w:"
+    TAR_FORMAT = tarfile.USTAR_FORMAT
+    ENTRY_NAME_MAX_LENGTH = 100
 
     def getSHA256(self, filepath: str) -> str:
         with open(filepath, "rb") as file:
@@ -205,13 +214,48 @@ class PackParser(BaseModel):
             sha256 = hashlib.sha256(file_bytes).hexdigest()
         return sha256
 
-    def parse(self, packpath: str) -> None:
+    def _rebuild(self, packpath):
+        pack_set = pathlib.Path(packpath)
+        pack_source = pack_set / "source"
+        pack_compiled = pack_set / ".compiled"
+        asset_packer.pack(pack_source, pack_compiled, logger=logging.debug)
+
+        pack_zip = (pack_set / "file" / pack_set.name).with_suffix(".zip")
+        pack_targz = pack_zip.with_suffix(".tar.gz")
+        pack_zip.unlink(missing_ok=True)
+        pack_targz.unlink(missing_ok=True)
+
+        shutil.make_archive(pack_zip.with_suffix(""), "zip", pack_compiled)
+
+        with gzip.open(pack_targz, self.GZIP_MODE, compresslevel=self.GZIP_LEVEL) as f_zip:
+            with tarfile.open(mode=self.TAR_MODE, fileobj=f_zip, format=self.TAR_FORMAT) as f_tar:
+
+                def _tar_filter(tarinfo: tarfile.TarInfo):
+                    if len(tarinfo.name) > self.ENTRY_NAME_MAX_LENGTH:
+                        raise ValueError("Resource name too long")
+                    tarinfo.gid = tarinfo.uid = 0
+                    tarinfo.mtime = 0
+                    tarinfo.uname = tarinfo.gname = "furippa"
+                    return tarinfo
+
+                f_tar.add(
+                    pack_compiled,
+                    arcname="",
+                    filter=_tar_filter,
+                )
+
+        shutil.rmtree(pack_compiled)
+
+    def parse(self, packpath: str) -> Pack:
         id = os.path.basename(packpath)
+
+        self._rebuild(packpath)
 
         meta_path = os.path.join(packpath, "meta.json")
         with open(meta_path, "r") as f:
             meta: dict = json.load(f)
 
+        # TODO: Compute pack info like passport icons, count of anims...
         pack = Pack(
             id=id,
             name=meta.get("name", id.title()),
@@ -255,4 +299,4 @@ class PackParser(BaseModel):
                     )
                 )
 
-        self.result = pack
+        return pack
