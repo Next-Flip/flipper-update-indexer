@@ -48,7 +48,7 @@ def add_files_to_version(
                 if version.version in version.changelog:
                     pos = version.changelog.find(version.version)
                     pos = version.changelog.rfind("\n", 0, pos)
-                    version.changelog = version.changelog[pos+1:]
+                    version.changelog = version.changelog[pos + 1 :]
         elif latest_version not in cur:
             continue
         version.add_file(

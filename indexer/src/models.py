@@ -227,8 +227,12 @@ class PackParser(BaseModel):
 
         shutil.make_archive(pack_zip.with_suffix(""), "zip", pack_compiled)
 
-        with gzip.open(pack_targz, self.GZIP_MODE, compresslevel=self.GZIP_LEVEL) as f_zip:
-            with tarfile.open(mode=self.TAR_MODE, fileobj=f_zip, format=self.TAR_FORMAT) as f_tar:
+        with gzip.open(
+            pack_targz, self.GZIP_MODE, compresslevel=self.GZIP_LEVEL
+        ) as f_zip:
+            with tarfile.open(
+                mode=self.TAR_MODE, fileobj=f_zip, format=self.TAR_FORMAT
+            ) as f_tar:
 
                 def _tar_filter(tarinfo: tarfile.TarInfo):
                     if len(tarinfo.name) > self.ENTRY_NAME_MAX_LENGTH:
@@ -238,11 +242,7 @@ class PackParser(BaseModel):
                     tarinfo.uname = tarinfo.gname = "furippa"
                     return tarinfo
 
-                f_tar.add(
-                    pack_compiled,
-                    arcname="",
-                    filter=_tar_filter,
-                )
+                f_tar.add(pack_compiled, arcname="", filter=_tar_filter)
 
         shutil.rmtree(pack_compiled)
 

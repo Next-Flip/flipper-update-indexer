@@ -37,6 +37,11 @@ def startup_event() -> None:
             os.makedirs(dir_path, exist_ok=True)
         except Exception:
             logging.exception(f"Failed to create {dir_path}")
+    logger = logging.getLogger()
+    prev_level = logger.level
+    logger.setLevel(logging.INFO)
+    logging.info("Startup complete")
+    logger.setLevel(prev_level)
 
 
 app.include_router(file_upload.router)
