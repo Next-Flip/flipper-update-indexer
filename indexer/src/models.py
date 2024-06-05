@@ -55,11 +55,20 @@ class PackFile(BaseModel):
     sha256: str
 
 
+class PackStats(BaseModel):
+    packs: int = 0
+    anims: int = 0
+    icons: int = 0
+    passport: List[str] = []
+    fonts: List[str] = []
+
+
 class Pack(BaseModel):
     id: str
     name: str
     author: str
     source_url: str = None
+    stats: PackStats = PackStats()
     description: str = None
     files: List[PackFile] = []
     preview_urls: List[str] = []
@@ -207,6 +216,7 @@ class PackParser(BaseModel):
     TAR_MODE = "w:"
     TAR_FORMAT = tarfile.USTAR_FORMAT
     ENTRY_NAME_MAX_LENGTH = 100
+    ANIM_REGEX = re.compile(rb"^Name: ", re.MULTILINE)
 
     def getSHA256(self, filepath: str) -> str:
         with open(filepath, "rb") as file:
@@ -252,7 +262,6 @@ class PackParser(BaseModel):
         with open(pack_set / "meta.json", "r") as f:
             meta: dict = json.load(f)
 
-        # TODO: Compute pack info like passport icons, count of anims...
         pack = Pack(
             id=pack_set.name,
             name=meta.get("name", pack_set.name.title()),
@@ -260,6 +269,47 @@ class PackParser(BaseModel):
             source_url=meta.get("source_url"),
             description=meta.get("description"),
         )
+
+        for pack_entry in (pack_set / "source").iterdir():
+            if not pack_entry.is_dir():
+                continue
+            anims = 0
+            icons = 0
+            passport = set()
+            fonts = set()
+            if (pack_entry / "Anims/manifest.txt").is_file():
+                manifest = (pack_entry / "Anims/manifest.txt").read_bytes()
+                anims = sum(1 for _ in self.ANIM_REGEX.finditer(manifest))
+            if (pack_entry / "Icons").is_dir():
+                for icon_set in (pack_entry / "Icons").iterdir():
+                    if not icon_set.is_dir() or icon_set.name.startswith("."):
+                        continue
+                    for icon in icon_set.iterdir():
+                        if icon.name.startswith("."):
+                            continue
+                        if icon.is_dir() and (
+                            (icon / "frame_rate").is_file() or (icon / "meta").is_file()
+                        ):
+                            icons += 1
+                        elif icon.is_file() and icon.suffix in (".png", ".bmx"):
+                            if icon_set.name == "Passport":
+                                parts = icon.name.split("_")
+                                if len(parts) < 3:  # passport_128x64
+                                    passport.add("Background")
+                                else:
+                                    passport.add(parts[1].title())
+                            else:
+                                icons += 1
+            if (pack_entry / "Fonts").is_dir():
+                for font in (pack_entry / "Fonts").iterdir():
+                    if font.suffix in (".c", ".u8f"):
+                        fonts.add(font.stem)
+            if anims or icons or passport or fonts:
+                pack.stats.packs += 1
+                pack.stats.anims += anims
+                pack.stats.icons += icons
+                pack.stats.passport = sorted(passport.union(pack.stats.passport))
+                pack.stats.fonts = sorted(fonts.union(pack.stats.fonts))
 
         for file in (pack_set / "file").iterdir():
             # skip .DS_store files
