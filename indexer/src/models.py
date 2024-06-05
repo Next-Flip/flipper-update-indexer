@@ -229,10 +229,11 @@ class PackParser(BaseModel):
         pack_compiled = pack_set / ".compiled"
         asset_packer.pack(pack_source, pack_compiled, logger=logging.debug)
 
-        pack_zip = (pack_set / "file" / pack_set.name).with_suffix(".zip")
+        pack_output = pack_set / "file"
+        shutil.rmtree(pack_output, ignore_errors=True)
+        pack_output.mkdir(parents=True, exist_ok=True)
+        pack_zip = pack_output / (pack_set.name + ".zip")
         pack_targz = pack_zip.with_suffix(".tar.gz")
-        pack_zip.unlink(missing_ok=True)
-        pack_targz.unlink(missing_ok=True)
 
         shutil.make_archive(pack_zip.with_suffix(""), "zip", pack_compiled)
 
