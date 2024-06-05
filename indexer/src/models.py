@@ -214,8 +214,7 @@ class PackParser(BaseModel):
             sha256 = hashlib.sha256(file_bytes).hexdigest()
         return sha256
 
-    def _rebuild(self, packpath):
-        pack_set = pathlib.Path(packpath)
+    def _rebuild(self, pack_set: pathlib.Path) -> None:
         pack_source = pack_set / "source"
         pack_compiled = pack_set / ".compiled"
         asset_packer.pack(pack_source, pack_compiled, logger=logging.debug)
@@ -247,56 +246,45 @@ class PackParser(BaseModel):
         shutil.rmtree(pack_compiled)
 
     def parse(self, packpath: str) -> Pack:
-        id = os.path.basename(packpath)
+        pack_set = pathlib.Path(packpath)
+        self._rebuild(pack_set)
 
-        self._rebuild(packpath)
-
-        meta_path = os.path.join(packpath, "meta.json")
-        with open(meta_path, "r") as f:
+        with open(pack_set / "meta.json", "r") as f:
             meta: dict = json.load(f)
 
         # TODO: Compute pack info like passport icons, count of anims...
         pack = Pack(
-            id=id,
-            name=meta.get("name", id.title()),
+            id=pack_set.name,
+            name=meta.get("name", pack_set.name.title()),
             author=meta.get("author", "N/A"),
             source_url=meta.get("source_url"),
             description=meta.get("description"),
         )
 
-        files_path = os.path.join(packpath, "file")
-        for cur in sorted(os.listdir(files_path)):
+        for file in (pack_set / "file").iterdir():
             # skip .DS_store files
-            if cur.startswith("."):
+            if file.name.startswith("."):
                 continue
-            if not cur.endswith((".zip", ".tar.gz")):
+            if not file.name.endswith((".zip", ".tar.gz")):
                 continue
-            file_path = os.path.join(files_path, cur)
             pack.add_file(
                 PackFile(
                     url=os.path.join(
-                        settings.base_url,
-                        os.path.relpath(file_path, settings.files_dir),
+                        settings.base_url, file.relative_to(settings.files_dir)
                     ),
-                    type="pack_" + cur.rsplit(".", 1)[-1].replace("gz", "targz"),
-                    sha256=self.getSHA256(file_path),
+                    type="pack_" + file.suffix.replace("gz", "targz"),
+                    sha256=self.getSHA256(file),
                 )
             )
 
-        previews_path = os.path.join(packpath, "preview")
-        if os.path.isdir(previews_path):
-            for cur in sorted(os.listdir(previews_path)):
-                # skip .DS_store files
-                if cur.startswith("."):
-                    continue
-                if not cur.endswith((".png", ".jpg", ".gif", ".mp4", ".webm")):
-                    continue
-                preview_path = os.path.join(previews_path, cur)
-                pack.add_preview_url(
-                    os.path.join(
-                        settings.base_url,
-                        os.path.relpath(preview_path, settings.files_dir),
-                    )
-                )
+        for preview in (pack_set / "preview").iterdir():
+            # skip .DS_store files
+            if preview.name.startswith("."):
+                continue
+            if preview.suffix not in (".png", ".jpg", ".gif"):
+                continue
+            pack.add_preview_url(
+                os.path.join(settings.base_url, preview.relative_to(settings.files_dir))
+            )
 
         return pack
