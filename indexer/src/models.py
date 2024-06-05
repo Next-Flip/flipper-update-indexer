@@ -323,7 +323,7 @@ class PackParser(BaseModel):
                     url=os.path.join(
                         settings.base_url, file.relative_to(settings.files_dir)
                     ),
-                    type="pack_" + file.suffix.replace("gz", "targz"),
+                    type="pack_" + file.suffix.removeprefix(".").replace("gz", "targz"),
                     sha256=self.getSHA256(file),
                 )
             )
