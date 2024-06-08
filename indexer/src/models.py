@@ -283,7 +283,7 @@ class PackParser(BaseModel):
                 anims = sum(1 for _ in self.ANIM_REGEX.finditer(manifest))
             if (pack_entry / "Icons").is_dir():
                 for icon_set in (pack_entry / "Icons").iterdir():
-                    if not icon_set.is_dir() or icon_set.name.startswith("."):
+                    if icon_set.name.startswith(".") or not icon_set.is_dir():
                         continue
                     for icon in icon_set.iterdir():
                         if icon.name.startswith("."):
@@ -303,6 +303,8 @@ class PackParser(BaseModel):
                                 icons += 1
             if (pack_entry / "Fonts").is_dir():
                 for font in (pack_entry / "Fonts").iterdir():
+                    if font.name.startswith(".") or not font.is_file():
+                        continue
                     if font.suffix in (".c", ".u8f"):
                         fonts.add(font.stem)
             if anims or icons or passport or fonts:
@@ -311,31 +313,40 @@ class PackParser(BaseModel):
                 pack.stats.icons += icons
                 pack.stats.passport = sorted(passport.union(pack.stats.passport))
                 pack.stats.fonts = sorted(fonts.union(pack.stats.fonts))
+            else:
+                logging.warn(
+                    f"Empty asset pack: {pack_entry.name!r} in set {pack_set.name!r}"
+                )
 
         for file in (pack_set / "file").iterdir():
-            # skip .DS_store files
-            if file.name.startswith("."):
+            if file.name.startswith(".") or not file.is_file():
                 continue
-            if not file.name.endswith((".zip", ".tar.gz")):
-                continue
-            pack.add_file(
-                PackFile(
-                    url=os.path.join(
-                        settings.base_url, file.relative_to(settings.files_dir)
-                    ),
-                    type="pack_" + file.suffix.removeprefix(".").replace("gz", "targz"),
-                    sha256=self.getSHA256(file),
+            if file.name.endswith((".zip", ".tar.gz")):
+                pack.add_file(
+                    PackFile(
+                        url=os.path.join(
+                            settings.base_url, file.relative_to(settings.files_dir)
+                        ),
+                        type="pack_"
+                        + file.suffix.removeprefix(".").replace("gz", "targz"),
+                        sha256=self.getSHA256(file),
+                    )
                 )
+        if len(pack.files) != 2:
+            logging.warn(
+                f"Wrong pack files: {pack_set.name!r} has {len(pack.files)} file{'' if len(pack.files) == 1 else 's'}"
             )
 
-        for preview in (pack_set / "preview").iterdir():
-            # skip .DS_store files
-            if preview.name.startswith("."):
+        for preview in sorted((pack_set / "preview").iterdir()):
+            if preview.name.startswith(".") or not preview.is_file():
                 continue
-            if preview.suffix not in (".png", ".jpg", ".gif"):
-                continue
-            pack.add_preview_url(
-                os.path.join(settings.base_url, preview.relative_to(settings.files_dir))
-            )
+            if preview.suffix in (".png", ".jpg", ".gif"):
+                pack.add_preview_url(
+                    os.path.join(
+                        settings.base_url, preview.relative_to(settings.files_dir)
+                    )
+                )
+        if not pack.preview_urls:
+            logging.warn(f"Missing pack previews: {pack_set.name!r}")
 
         return pack
