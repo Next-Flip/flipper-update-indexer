@@ -95,6 +95,21 @@ class RepositoryIndex:
             logging.exception(e)
             raise e
 
+    def get_branch_file_names(self: str, branch: str) -> list[str]:
+        """
+        A method to get a list of file names in the specified branch
+        Args:
+            branch: Branch name
+
+        Returns:
+            The list of file names
+        """
+        branch_path = os.path.join(settings.files_dir, self.directory, branch)
+        if not os.path.isdir(branch_path):
+            raise FileNotFoundError("Branch not found!")
+        files = os.listdir(branch_path)
+        return filter(lambda file: not file.startswith("."), files)
+
     def get_file_from_latest_version(
         self: str, channel: str, target: str, file_type: str
     ) -> str:
