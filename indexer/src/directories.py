@@ -10,6 +10,14 @@ router = APIRouter()
 lock = asyncio.Lock()
 
 
+@router.get("/")
+async def root_request():
+    """
+    API root, redirect to firmware index
+    """
+    return RedirectResponse("/firmware", status_code=303)
+
+
 def setup_routes(prefix: str, index):
     @router.get(prefix + "/directory.json")
     @router.get(prefix)
