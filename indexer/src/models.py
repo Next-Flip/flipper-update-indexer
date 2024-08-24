@@ -222,11 +222,6 @@ class FileParser(BaseModel):
 
 
 class PackParser(BaseModel):
-    GZIP_MODE = "wb"
-    GZIP_LEVEL = 9
-    TAR_MODE = "w:"
-    TAR_FORMAT = tarfile.USTAR_FORMAT
-    ENTRY_NAME_MAX_LENGTH = 100
     ANIM_REGEX = re.compile(rb"^Name: ", re.MULTILINE)
 
     def getSHA256(self, filepath: str) -> str:
@@ -235,41 +230,8 @@ class PackParser(BaseModel):
             sha256 = hashlib.sha256(file_bytes).hexdigest()
         return sha256
 
-    def _rebuild(self, pack_set: pathlib.Path) -> None:
-        pack_source = pack_set / "source"
-        pack_compiled = pack_set / ".compiled"
-        asset_packer.pack(pack_source, pack_compiled, logger=logging.debug)
-
-        pack_output = pack_set / "file"
-        shutil.rmtree(pack_output, ignore_errors=True)
-        pack_output.mkdir(parents=True, exist_ok=True)
-        pack_zip = pack_output / (pack_set.name + ".zip")
-        pack_targz = pack_zip.with_suffix(".tar.gz")
-
-        shutil.make_archive(pack_zip.with_suffix(""), "zip", pack_compiled)
-
-        with gzip.open(
-            pack_targz, self.GZIP_MODE, compresslevel=self.GZIP_LEVEL
-        ) as f_zip:
-            with tarfile.open(
-                mode=self.TAR_MODE, fileobj=f_zip, format=self.TAR_FORMAT
-            ) as f_tar:
-
-                def _tar_filter(tarinfo: tarfile.TarInfo):
-                    if len(tarinfo.name) > self.ENTRY_NAME_MAX_LENGTH:
-                        raise ValueError("Resource name too long")
-                    tarinfo.gid = tarinfo.uid = 0
-                    tarinfo.mtime = 0
-                    tarinfo.uname = tarinfo.gname = "furippa"
-                    return tarinfo
-
-                f_tar.add(pack_compiled, arcname="", filter=_tar_filter)
-
-        shutil.rmtree(pack_compiled)
-
     def parse(self, packpath: str) -> Pack:
         pack_set = pathlib.Path(packpath)
-        self._rebuild(pack_set)
 
         with open(pack_set / "meta.json", "r") as f:
             meta: dict = json.load(f)
