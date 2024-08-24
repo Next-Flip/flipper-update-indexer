@@ -218,7 +218,7 @@ class FileParser(BaseModel):
 
 
 class PackParser(BaseModel):
-    ANIM_REGEX = re.compile(rb"^Name: ", re.MULTILINE)
+    anim_regex: ClassVar[re.Pattern] = re.compile(rb"^Name: ", re.MULTILINE)
 
     def getSHA256(self, filepath: str) -> str:
         with open(filepath, "rb") as file:
@@ -249,7 +249,7 @@ class PackParser(BaseModel):
             fonts = set()
             if (pack_entry / "Anims/manifest.txt").is_file():
                 manifest = (pack_entry / "Anims/manifest.txt").read_bytes()
-                anims = sum(1 for _ in self.ANIM_REGEX.finditer(manifest))
+                anims = sum(1 for _ in self.anim_regex.finditer(manifest))
             if (pack_entry / "Icons").is_dir():
                 for icon_set in (pack_entry / "Icons").iterdir():
                     if icon_set.name.startswith(".") or not icon_set.is_dir():
