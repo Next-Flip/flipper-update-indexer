@@ -217,7 +217,7 @@ class PacksCatalog:
         A method to get a specific file by type and name in the specified pack
         Args:
             pack: Pack id
-            file_type: File Type (file, preview)
+            file_type: File Type (download, preview)
             file_name: File Name
 
         Returns:
@@ -226,7 +226,7 @@ class PacksCatalog:
         file_path = os.path.join(
             settings.files_dir, self.directory, pack, file_type, file_name
         )
-        if file_type not in ("file", "preview") or not os.path.isfile(file_path):
+        if file_type not in ("download", "preview") or not os.path.isfile(file_path):
             raise FileNotFoundError("File not found, try a newer link!")
         return file_path
 

@@ -88,7 +88,7 @@ def setup_routes(prefix: str, index):
             A method for retrieving a file from a specific pack
             Args:
                 pack: Pack id
-                file_type: File Type (file, preview)
+                file_type: File Type (download, preview)
                 file_name: File Name
 
             Returns:

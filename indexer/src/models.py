@@ -291,7 +291,7 @@ class PackParser(BaseModel):
                     f"Pack {pack_entry.name!r} in set {pack_set.name!r} is empty"
                 )
 
-        for file in (pack_set / "file").iterdir():
+        for file in (pack_set / "download").iterdir():
             if file.name.startswith(".") or not file.is_file():
                 continue
             if file.name.endswith((".zip", ".tar.gz")):
