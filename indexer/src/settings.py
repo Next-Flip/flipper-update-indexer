@@ -11,13 +11,13 @@ class Settings(BaseModel):
     base_url: str
     token: str
     github_org: str
-    gelf_host: str = None
-    gelf_port: str = None
-    kubernetes_namespace: str = None
-    kubernetes_app: str = None
-    kubernetes_container: str = None
-    kubernetes_pod: str = None
-    firmware_github_token: str = None
+    gelf_host: str | None
+    gelf_port: str | None
+    kubernetes_namespace: str | None
+    kubernetes_app: str | None
+    kubernetes_container: str | None
+    kubernetes_pod: str | None
+    firmware_github_token: str | None
     firmware_github_repo: str
     private_paths: List[str]
 
