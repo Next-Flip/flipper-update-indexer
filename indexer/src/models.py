@@ -1,9 +1,6 @@
 import re
 import os
 import json
-import gzip
-import shutil
-import tarfile
 import hashlib
 import logging
 import pathlib
@@ -11,7 +8,6 @@ from pydantic import BaseModel
 from github import Github, Repository
 from typing import List, ClassVar
 
-from . import asset_packer
 from .settings import settings
 
 
