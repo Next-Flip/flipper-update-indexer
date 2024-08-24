@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import sys
 import os
 import logging
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from src import directories, file_upload, security
@@ -10,18 +10,9 @@ from src.repository import indexes, raw_file_upload_directories
 from src.settings import settings
 from pygelf import GelfTcpHandler
 
-app = FastAPI(docs_url=None, redoc_url=None)
 
-
-@app.middleware("http")
-async def check_token(request: Request, call_next):
-    if security.check_token(request):
-        return await call_next(request)
-    return Response(status_code=401)
-
-
-@app.on_event("startup")
-def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     if not os.path.isdir(settings.files_dir):
         os.makedirs(settings.files_dir)
     for index in indexes:
@@ -37,6 +28,18 @@ def startup_event() -> None:
             os.makedirs(dir_path, exist_ok=True)
         except Exception:
             logging.exception(f"Failed to create {dir_path}")
+
+    yield
+
+
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None)
+
+
+@app.middleware("http")
+async def check_token(request: Request, call_next):
+    if security.check_token(request):
+        return await call_next(request)
+    return Response(status_code=401)
 
 
 app.include_router(file_upload.router)
