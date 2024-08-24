@@ -326,7 +326,7 @@ class PackParser(BaseModel):
                 pack.stats.fonts = sorted(fonts.union(pack.stats.fonts))
             else:
                 logging.warn(
-                    f"Empty asset pack: {pack_entry.name!r} in set {pack_set.name!r}"
+                    f"Pack {pack_entry.name!r} in set {pack_set.name!r} is empty"
                 )
 
         for file in (pack_set / "file").iterdir():
@@ -345,7 +345,8 @@ class PackParser(BaseModel):
                 )
         if len(pack.files) != 2:
             logging.warn(
-                f"Wrong pack files: {pack_set.name!r} has {len(pack.files)} file{'' if len(pack.files) == 1 else 's'}"
+                f"Pack {pack_set.name!r} has {len(pack.files)} file{'' if len(pack.files) == 1 else 's'}, "
+                "should be 2 files (.zip and .tar.gz)"
             )
 
         for preview in sorted((pack_set / "preview").iterdir()):
@@ -359,7 +360,8 @@ class PackParser(BaseModel):
                 )
         if len(pack.preview_urls) not in range(1, 8):
             logging.warn(
-                f"Wrong pack previews: {pack_set.name!r} has {len(pack.preview_urls)} previews"
+                f"Pack {pack_set.name!r} has {len(pack.preview_urls)} previews, "
+                "should be between 1 and 8"
             )
 
         return pack
