@@ -184,9 +184,9 @@ class PacksCatalog:
         """
         main_dir = os.path.join(settings.files_dir, self.directory)
         for cur in os.listdir(main_dir):
-            if cur.startswith("."):
-                continue
             cur_dir = os.path.join(main_dir, cur)
+            if cur.startswith(".") or not os.path.isdir(cur_dir):
+                continue
             dir_content = os.listdir(cur_dir)
             if len(dir_content) > 0:
                 continue
