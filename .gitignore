@@ -2,4 +2,4 @@ __pycache__
 *.swp
 venv
 files
-run.sh
+.env

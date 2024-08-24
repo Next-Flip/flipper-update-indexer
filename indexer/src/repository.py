@@ -52,7 +52,6 @@ class RepositoryIndex:
         Returns:
             Nothing
         """
-        self.indexer_github.sync_info()
         main_dir = os.path.join(settings.files_dir, self.directory)
         for root, dirs, files in os.walk(main_dir):
             if len(files) == 0:
@@ -84,6 +83,7 @@ class RepositoryIndex:
             Nothing
         """
         try:
+            self.indexer_github.sync_info()
             self.index = parse_github_channels(
                 self.directory, self.file_parser, self.indexer_github
             )
