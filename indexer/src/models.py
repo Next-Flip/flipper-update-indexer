@@ -63,11 +63,11 @@ class Pack(BaseModel):
     id: str
     name: str
     author: str
-    source_url: str = None
-    stats: PackStats = PackStats()
-    description: str = None
+    source_url: str
+    description: str
     files: List[PackFile] = []
     preview_urls: List[str] = []
+    stats: PackStats = PackStats()
 
     def add_file(self, file: PackFile) -> None:
         self.files.append(file)
@@ -236,8 +236,8 @@ class PackParser(BaseModel):
             id=pack_set.name,
             name=meta.get("name", pack_set.name.title()),
             author=meta.get("author", "N/A"),
-            source_url=meta.get("source_url"),
-            description=meta.get("description"),
+            source_url=meta.get("source_url", ""),
+            description=meta.get("description", ""),
         )
 
         for pack_entry in (pack_set / "source").iterdir():
