@@ -4,6 +4,7 @@ import json
 import hashlib
 import logging
 import pathlib
+import subprocess
 from pydantic import BaseModel
 from github import Github, Repository
 from typing import List, ClassVar
@@ -58,6 +59,8 @@ class PackStats(BaseModel):
     passport: List[str] = []
     fonts: List[str] = []
     folders: List[str] = []
+    updated: int = 0
+    added: int = 0
 
 
 class Pack(BaseModel):
@@ -295,6 +298,19 @@ class PackParser(BaseModel):
                     f"Pack {pack_entry.name!r} in set {pack_set.name!r} is empty"
                 )
         pack.stats.anims = len(anims_names)
+
+        get_file_date = ["git", "log", "-1", r"--format=%ct"]
+        targz_file = f"download/{pack.id}.tar.gz"
+        updated = subprocess.check_output(
+            [*get_file_date, "--", targz_file],
+            cwd=pack_set,
+        )
+        pack.stats.updated = int(updated)
+        added = subprocess.check_output(
+            [*get_file_date, "--diff-filter=A", "--follow", "--", targz_file],
+            cwd=pack_set,
+        )
+        pack.stats.added = int(added)
 
         for file in (pack_set / "download").iterdir():
             if file.name.startswith(".") or not file.is_file():
