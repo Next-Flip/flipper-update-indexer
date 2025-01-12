@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import time
 import hashlib
 import logging
 import pathlib
@@ -305,12 +306,12 @@ class PackParser(BaseModel):
             [*get_file_date, "--", targz_file],
             cwd=pack_set,
         )
-        pack.stats.updated = int(updated)
+        pack.stats.updated = int(updated if updated else time.time())
         added = subprocess.check_output(
             [*get_file_date, "--diff-filter=A", "--follow", "--", targz_file],
             cwd=pack_set,
         )
-        pack.stats.added = int(added)
+        pack.stats.added = int(added if added else time.time())
 
         for file in (pack_set / "download").iterdir():
             if file.name.startswith(".") or not file.is_file():
