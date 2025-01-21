@@ -173,7 +173,8 @@ class IndexerGithub:
                     .replace("**", "")
                 )
                 msg = msg[:50] + ("..." if len(msg) > 50 else "")
-                changelog += f"[`{commit.sha[:8]}`]({commit.html_url}): {msg} - [__{commit.author.login}__](https://github.com/{commit.author.login})\n"
+                username = commit.author.login if commit.author else "ghost"
+                changelog += f"[`{commit.sha[:8]}`]({commit.html_url}): {msg} - [__{username}__](https://github.com/{username})\n"
             return Version(
                 version=last_commit.sha[:8],
                 changelog=changelog,
