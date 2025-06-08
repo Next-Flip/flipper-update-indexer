@@ -2,6 +2,7 @@ import re
 import os
 import json
 import time
+import pytz
 import hashlib
 import logging
 import pathlib
@@ -178,7 +179,7 @@ class IndexerGithub:
             return Version(
                 version=last_commit.sha[:8],
                 changelog=changelog,
-                timestamp=int(last_commit.commit.author.date.timestamp()),
+                timestamp=int(pytz.utc.localize(last_commit.commit.author.date).timestamp()),
             )
         except Exception as e:
             logging.exception(e)
@@ -194,7 +195,7 @@ class IndexerGithub:
             return Version(
                 version=last_release.title,
                 changelog=last_release.body.split("## 🚀 Changelog", 1)[-1].lstrip(),
-                timestamp=int(last_release.created_at.timestamp()),
+                timestamp=int(pytz.utc.localize(last_release.published_at).timestamp()),
             )
         except StopIteration:
             return None
