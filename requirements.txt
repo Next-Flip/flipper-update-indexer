@@ -5,3 +5,4 @@ jsonschema==4.17.3
 PyGithub==1.57
 black==24.3.0
 pygelf==0.4.2
+pytz==2025.2
