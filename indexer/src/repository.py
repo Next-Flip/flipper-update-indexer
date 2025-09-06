@@ -45,7 +45,7 @@ class RepositoryIndex:
     def delete_unlinked_directories(self):
         """
         A method for cleaning directories that do not match
-        branches/releases in the repository
+        prs/releases in the repository
         Args:
             Nothing
 
@@ -64,7 +64,7 @@ class RepositoryIndex:
                 continue
             if self.indexer_github.is_tag_exist(cur_dir):
                 continue
-            if self.indexer_github.is_branch_exist(cur_dir):
+            if self.indexer_github.is_pr_exist(cur_dir):
                 continue
             shutil.rmtree(os.path.join(main_dir, cur_dir))
             logging.info(f"Deleting {cur_dir}")

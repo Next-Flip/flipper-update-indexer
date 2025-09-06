@@ -9,6 +9,7 @@ import pathlib
 import subprocess
 from pydantic import BaseModel
 from github import Github, Repository
+from github.PullRequest import PullRequest
 from typing import List, ClassVar
 
 from .settings import settings
@@ -93,7 +94,7 @@ class IndexerGithub:
     __repo: Repository.Repository = None
     __tags: List = []
     __releases: List = []
-    __branches: List = []
+    __prs: List = []
 
     def login(self, token: str, repo_name: str, org_name: str) -> None:
         try:
@@ -120,10 +121,14 @@ class IndexerGithub:
             logging.exception(e)
             raise e
 
-    def __get_branches(self) -> None:
+    def __get_prs(self) -> None:
         try:
-            github_branches = self.__repo.get_branches()
-            self.__branches = [x.name for x in github_branches]
+            github_prs = self.__repo.get_pulls(
+                state="open", sort="updated", direction="desc"
+            )
+            self.__prs = [
+                x for x in github_prs if x.head.repo.full_name == x.base.repo.full_name
+            ]
         except Exception as e:
             logging.exception(e)
             raise e
@@ -131,25 +136,20 @@ class IndexerGithub:
     def sync_info(self):
         self.__get_tags()
         self.__get_releases()
-        self.__get_branches()
+        self.__get_prs()
 
-    def get_unstable_branch_names(self) -> List[str]:
-        return [
-            branch
-            for branch in self.__branches
-            if branch
-            not in (
-                "dev",
-                "release",
-            )
-        ]
+    def get_pr_branches(self) -> List[str]:
+        return [pr.head.ref for pr in self.__prs]
+
+    def get_prs(self) -> List[PullRequest]:
+        return self.__prs
 
     """
         We need all stuff above (except login) for the delete_unlinked_directories function in repository.py
     """
 
-    def is_branch_exist(self, branch: str) -> bool:
-        return branch in self.__branches
+    def is_pr_exist(self, branch: str) -> bool:
+        return branch in self.get_pr_branches()
 
     def is_release_exist(self, release: str) -> bool:
         return release in self.__releases
@@ -179,7 +179,9 @@ class IndexerGithub:
             return Version(
                 version=last_commit.sha[:8],
                 changelog=changelog,
-                timestamp=int(pytz.utc.localize(last_commit.commit.author.date).timestamp()),
+                timestamp=int(
+                    pytz.utc.localize(last_commit.commit.author.date).timestamp()
+                ),
             )
         except Exception as e:
             logging.exception(e)

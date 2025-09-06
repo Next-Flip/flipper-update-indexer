@@ -143,14 +143,15 @@ def parse_github_channels(
             indexer_github,
         )
     )
-    for branch in indexer_github.get_unstable_branch_names():
+    for pr in indexer_github.get_prs():
+        branch = pr.head.ref
         branch_dir = os.path.join(settings.files_dir, directory, branch)
         if not os.path.isdir(branch_dir) or len(os.listdir(branch_dir)) <= 1:
             continue
-        channel = copy.deepcopy(branch_channel)
-        channel.id = channel.id.format(branch=branch)
-        channel.title = channel.title.format(branch=branch)
-        channel.description = channel.description.format(branch=branch)
+        channel = copy.deepcopy(pr_channel)
+        channel.id = channel.id.format(pr=pr.number, branch=branch)
+        channel.title = channel.title.format(pr=pr.number, branch=branch)
+        channel.description = channel.description.format(pr=pr.number, branch=branch)
         json.add_channel(
             parse_dev_channel(channel, directory, file_parser, indexer_github, branch)
         )

@@ -11,8 +11,8 @@ release_channel = Channel(
     title="Stable Release Channel",
     description="Less frequent, more stable releases",
 )
-branch_channel = Channel(
-    id="wip-{branch}",
-    title="Unstable Branch '{branch}'",
-    description="Work in progress, unstable branch '{branch}'",
+pr_channel = Channel(
+    id="pr{pr}:{branch}",
+    title="Branch '{branch}' (PR #{pr})",
+    description="Work in progress, branch '{branch}' (PR #{pr})",
 )
