@@ -346,10 +346,10 @@ class PackParser(BaseModel):
                         settings.base_url, preview.relative_to(settings.files_dir)
                     )
                 )
-        if len(pack.preview_urls) not in range(1, 8):
-            logging.warn(
-                f"Pack {pack_set.name!r} has {len(pack.preview_urls)} previews, "
-                "should be between 1 and 7"
-            )
+        # if len(pack.preview_urls) not in range(1, 8):
+        #     logging.warn(
+        #         f"Pack {pack_set.name!r} has {len(pack.preview_urls)} previews, "
+        #         "should be between 1 and 7"
+        #     )
 
         return pack
