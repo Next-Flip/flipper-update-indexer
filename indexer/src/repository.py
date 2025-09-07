@@ -59,9 +59,9 @@ class RepositoryIndex:
             # skip .DS_store files
             if len(files) == 1 and files[0].startswith("."):
                 continue
+            cur_dir = root.split(main_dir + "/")[1]
             if cur_dir == "dev":
                 continue
-            cur_dir = root.split(main_dir + "/")[1]
             if self.indexer_github.is_release_exist(cur_dir):
                 continue
             if self.indexer_github.is_tag_exist(cur_dir):
