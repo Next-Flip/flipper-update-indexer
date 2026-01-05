@@ -151,7 +151,9 @@ def parse_github_channels(
         channel = copy.deepcopy(pr_channel)
         channel.id = channel.id.format(pr=pr.number, branch=branch)
         channel.title = channel.title.format(pr=pr.number, branch=branch)
-        channel.description = channel.description.format(pr=pr.number, branch=branch)
+        channel.description = (
+            pr.body.split("# What's new", 1)[-1].strip().splitlines()[0]
+        )
         json.add_channel(
             parse_dev_channel(channel, directory, file_parser, indexer_github, branch)
         )

@@ -14,5 +14,5 @@ release_channel = Channel(
 pr_channel = Channel(
     id="pr{pr}:{branch}",
     title="Branch '{branch}' (PR #{pr})",
-    description="Work in progress, branch '{branch}' (PR #{pr})",
+    description="",
 )
