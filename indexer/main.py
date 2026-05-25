@@ -59,6 +59,7 @@ app.add_middleware(
         "http://localhost:8000",
         "http://localhost:8080",
     ],
+    allow_origin_regex='https://v2momentum-fw-.*\.vercel\.app'
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
